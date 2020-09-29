@@ -1,38 +1,46 @@
 package awsutil
 
 import (
-	"github.com/aphistic/sweet"
-	. "github.com/efritz/go-mockgen/matchers"
+	"testing"
+
+	mockassert "github.com/efritz/go-mockgen/assert"
+	logmocks "github.com/go-nacelle/log/mocks"
 	"github.com/go-nacelle/nacelle/mocks"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 )
 
-type LoggerSuite struct{}
-
-func (s *LoggerSuite) TestLogAdapter(t sweet.T) {
+func TestLogAdapter(t *testing.T) {
 	logger := mocks.NewMockLogger()
 	adapter := NewAWSLogAdapter(logger)
 	adapter.Log("Hello")
-	Expect(logger.DebugFunc).To(BeCalledWith("Hello"))
+	mockassert.CalledOnceMatching(t, logger.DebugFunc, func(t assert.TestingT, call interface{}) bool {
+		return call.(logmocks.LoggerDebugFuncCall).Arg0 == "Hello" // TODO - ergonomics
+	})
 }
 
-func (s *LoggerSuite) TestLogAdapterWithArgs(t sweet.T) {
+func TestLogAdapterWithArgs(t *testing.T) {
 	logger := mocks.NewMockLogger()
 	adapter := NewAWSLogAdapter(logger)
 	adapter.Log("Hello, %s and %s", "bar", "baz")
-	Expect(logger.DebugFunc).To(BeCalledWith("Hello, %s and %s", "bar", "baz"))
+	mockassert.CalledOnceMatching(t, logger.DebugFunc, func(t assert.TestingT, call interface{}) bool {
+		c := call.(logmocks.LoggerDebugFuncCall)
+		return c.Arg0 == "Hello, %s and %s" // TODO - ergonomics
+		// TODO - && c.Arg1 == "bar" && c.Arg2 == "baz"
+	})
 }
 
-func (s *LoggerSuite) TestLogAdapterNonStringFormat(t sweet.T) {
+func TestLogAdapterNonStringFormat(t *testing.T) {
 	logger := mocks.NewMockLogger()
 	adapter := NewAWSLogAdapter(logger)
 	adapter.Log([]string{"this", "is", "dangerous"})
-	Expect(logger.DebugFunc).To(BeCalledWith("[this is dangerous]"))
+	mockassert.CalledOnceMatching(t, logger.DebugFunc, func(t assert.TestingT, call interface{}) bool {
+		return call.(logmocks.LoggerDebugFuncCall).Arg0 == "[this is dangerous]" // TODO - ergonomics
+	})
 }
 
-func (s *LoggerSuite) TestLogAdapterNoArgs(t sweet.T) {
+func TestLogAdapterNoArgs(t *testing.T) {
 	logger := mocks.NewMockLogger()
 	adapter := NewAWSLogAdapter(logger)
 	adapter.Log()
-	Expect(logger.DebugFunc).NotTo(BeCalled())
+	mockassert.NotCalled(t, logger.DebugFunc)
 }

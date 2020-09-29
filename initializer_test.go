@@ -1,16 +1,15 @@
 package awsutil
 
 import (
-	"github.com/aphistic/sweet"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/go-nacelle/nacelle"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 )
 
-type InitializerSuite struct{}
-
-func (s *InitializerSuite) TestInitDefault(t sweet.T) {
+func TestInitDefault(t *testing.T) {
 	factory := func(s *session.Session) interface{} {
 		return "service"
 	}
@@ -21,11 +20,13 @@ func (s *InitializerSuite) TestInitDefault(t sweet.T) {
 
 	config := nacelle.NewConfig(nacelle.NewTestEnvSourcer(nil))
 	err := initializer.Init(config)
-	Expect(err).To(BeNil())
-	Expect(initializer.Services.Get("test")).To(Equal("service"))
+	assert.Nil(t, err)
+	service, err := initializer.Services.Get("test")
+	assert.Nil(t, err)
+	assert.Equal(t, "service", service)
 }
 
-func (s *InitializerSuite) TestInitServiceSpecificConfig(t sweet.T) {
+func TestInitServiceSpecificConfig(t *testing.T) {
 	var awsConfig *aws.Config
 	factory := func(sess *session.Session) interface{} {
 		awsConfig = sess.Config
@@ -44,15 +45,17 @@ func (s *InitializerSuite) TestInitServiceSpecificConfig(t sweet.T) {
 	}))
 
 	err := initializer.Init(config)
-	Expect(err).To(BeNil())
-	Expect(initializer.Services.Get("test")).To(Equal("service"))
-	Expect(*awsConfig.Endpoint).To(Equal("http://localhost:1234"))
-	Expect(*awsConfig.LogLevel).To(Equal(aws.LogDebug))
-	Expect(*awsConfig.Region).To(Equal("local"))
-	Expect(*awsConfig.DisableSSL).To(BeFalse())
+	assert.Nil(t, err)
+	service, err := initializer.Services.Get("test")
+	assert.Nil(t, err)
+	assert.Equal(t, "service", service)
+	assert.Equal(t, "http://localhost:1234", *awsConfig.Endpoint)
+	assert.Equal(t, aws.LogDebug, *awsConfig.LogLevel)
+	assert.Equal(t, "local", *awsConfig.Region)
+	assert.False(t, *awsConfig.DisableSSL)
 }
 
-func (s *InitializerSuite) TestInitFallbackConfig(t sweet.T) {
+func TestInitFallbackConfig(t *testing.T) {
 	var awsConfig *aws.Config
 	factory := func(sess *session.Session) interface{} {
 		awsConfig = sess.Config
@@ -71,15 +74,17 @@ func (s *InitializerSuite) TestInitFallbackConfig(t sweet.T) {
 	}))
 
 	err := initializer.Init(config)
-	Expect(err).To(BeNil())
-	Expect(initializer.Services.Get("test")).To(Equal("service"))
-	Expect(*awsConfig.Endpoint).To(Equal("http://localhost:1234"))
-	Expect(*awsConfig.LogLevel).To(Equal(aws.LogDebug))
-	Expect(*awsConfig.Region).To(Equal("local"))
-	Expect(*awsConfig.DisableSSL).To(BeTrue())
+	assert.Nil(t, err)
+	service, err := initializer.Services.Get("test")
+	assert.Nil(t, err)
+	assert.Equal(t, "service", service)
+	assert.Equal(t, "http://localhost:1234", *awsConfig.Endpoint)
+	assert.Equal(t, aws.LogDebug, *awsConfig.LogLevel)
+	assert.Equal(t, "local", *awsConfig.Region)
+	assert.True(t, *awsConfig.DisableSSL)
 }
 
-func (s *InitializerSuite) TestInitializeWithLiteralConfig(t sweet.T) {
+func TestInitializeWithLiteralConfig(t *testing.T) {
 	var awsConfig *aws.Config
 	factory := func(sess *session.Session) interface{} {
 		awsConfig = sess.Config
@@ -100,10 +105,12 @@ func (s *InitializerSuite) TestInitializeWithLiteralConfig(t sweet.T) {
 	}))
 
 	err := initializer.Init(config)
-	Expect(err).To(BeNil())
-	Expect(initializer.Services.Get("test")).To(Equal("service"))
-	Expect(*awsConfig.Endpoint).To(Equal("http://localhost:1234"))
-	Expect(*awsConfig.LogLevel).To(Equal(aws.LogDebug))
-	Expect(*awsConfig.Region).To(Equal("local"))
-	Expect(*awsConfig.DisableSSL).To(BeTrue())
+	assert.Nil(t, err)
+	service, err := initializer.Services.Get("test")
+	assert.Nil(t, err)
+	assert.Equal(t, "service", service)
+	assert.Equal(t, "http://localhost:1234", *awsConfig.Endpoint)
+	assert.Equal(t, aws.LogDebug, *awsConfig.LogLevel)
+	assert.Equal(t, "local", *awsConfig.Region)
+	assert.True(t, *awsConfig.DisableSSL)
 }
